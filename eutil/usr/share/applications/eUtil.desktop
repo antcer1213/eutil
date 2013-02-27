@@ -1,0 +1,13 @@
+[Desktop Entry]
+Hidden=false
+Exec=eutil
+Icon=applications-accessories
+Type=Application
+Categories=Application;Utility;
+NoDisplay=false
+StartupNotify=true
+Comment=A simple interface for cp, mv, and rm.
+Terminal=false
+Name=eUtil
+GenericName=File/Directory Manipulation
+Comment[en_US]=A simple interface for cp, mv, and rm.
