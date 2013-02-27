@@ -246,7 +246,7 @@ class buttons_main(object):
                         self.warning_popup(self.win, bt, val)
                         return
                 else:
-                    if path == HOME or path == "" or path == "/etc" or path == "/usr" or path == "/bin" or path == "/boot" or path == "/lib" or path == "/home" or path == "/lib32" or path == "/lib64" or path == "/opt" or path == "/proc" or path == "/root" or path == "/sbin" or path == "/var" or path == "/media" or path == "/mnt" or path == "/dev" or path == "/cdrom" or path == "/lost+found" or path == "/run" or path == "/selinux" or path == "/srv"or path == "/sys"or path == "/tmp" or path == "/vmlinuz" or path == "/initrd.img":
+                    if path == HOME or path == "" or path == "/etc" or path == "/usr" or path == "/bin" or path == "/boot" or path == "/lib" or path == "/home" or path == "/lib32" or path == "/lib64" or path == "/opt" or path == "/proc" or path == "/root" or path == "/sbin" or path == "/var" or path == "/media" or path == "/mnt" or path == "/dev" or path == "/cdrom" or path == "/lost+found" or path == "/run" or path == "/selinux" or path == "/srv"or path == "/sys"or path == "/tmp" or path == "//vmlinuz" or path == "/vmlinuz" or path == "//initrd.img" or path == "/initrd.img":
                         error_sys_popup(self.win)
                         return
                     elif os.path.ismount(path):
