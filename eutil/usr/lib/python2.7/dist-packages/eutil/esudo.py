@@ -200,7 +200,7 @@ class eSudo(object):
 
 #--------eSudo Cancel Button
     def esudo_cancel(self, bt, enpw):
-        logging.info("Cancelled before initiated.")
+        logging.info("Cancelled.")
         enpw.entry = ""
         self.enpw.focus = False
         self.close()

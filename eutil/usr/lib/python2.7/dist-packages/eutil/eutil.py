@@ -5,7 +5,7 @@ import ecore
 import elementary as elm
 import esudo
 import evas
-#~ import checks
+import mimetypes
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -44,6 +44,20 @@ def file_noexist_popup(win):
     popup.size_hint_weight = (1.0, 1.0)
     popup.text = "<b>Path does not exist</><br><br>Please select an appropriate path as the source."
     popup.timeout = 3.0
+    popup.show()
+
+def dest_noexist_popup(win):
+    popup = elm.Popup(win)
+    popup.size_hint_weight = (1.0, 1.0)
+    popup.text = "<b>Destination does not exist</><br><br>Please select an appropriate path as the destination."
+    popup.timeout = 3.0
+    popup.show()
+
+def notsame_popup(win):
+    popup = elm.Popup(win)
+    popup.size_hint_weight = (1.0, 1.0)
+    popup.text = "<b>Not the same type</><br><br>Please make sure the source and destination are of the same type<ps><b><i>(filetype-to-filetype or directory-to-directory)</i></b><ps>to successfully rename."
+    popup.timeout = 4.0
     popup.show()
 
 def error_ln_popup(win):
@@ -226,47 +240,83 @@ class buttons_main(object):
 #----Common
     def exec_check(self, bt):
         path = self.fssrc.selected_get()
+        dest = self.fsdest.selected_get()
         path = path.rstrip('\\')
         path = path.rstrip('//')
+        dest = dest.rstrip('\\')
+        dest = dest.rstrip('//')
         val = self.rdg.value_get()
         act = "Action: "
-        if os.path.exists(path):
-            if not val:
-                print(act + "No action selected.")
+        if val == 2:
+            if path == HOME:
                 return
-            else:
-                if val == 1:
-                    bt.disabled_set(True)
-                    print(act + "Copy")
-                    if os.path.isdir(path):
-                        val = 5
-                        self.warning_popup(self.win, bt, val)
-                        return
-                    else:
-                        self.warning_popup(self.win, bt, val)
-                        return
+            elif os.path.exists(path):
+                bt.disabled_set(True)
+                if os.path.exists(dest):
+                    print(act + "Move")
+                    self.warning_popup(self.win, bt, val)
+                    return
                 else:
-                    if path == HOME or path == "" or path == "/etc" or path == "/usr" or path == "/bin" or path == "/boot" or path == "/lib" or path == "/home" or path == "/lib32" or path == "/lib64" or path == "/opt" or path == "/proc" or path == "/root" or path == "/sbin" or path == "/var" or path == "/media" or path == "/mnt" or path == "/dev" or path == "/cdrom" or path == "/lost+found" or path == "/run" or path == "/selinux" or path == "/srv"or path == "/sys"or path == "/tmp" or path == "//vmlinuz" or path == "/vmlinuz" or path == "//initrd.img" or path == "/initrd.img":
-                        error_sys_popup(self.win)
-                        return
-                    elif os.path.ismount(path):
-                        error_mnt_popup(self.win)
-                        return
-                    elif val == 2:
-                        bt.disabled_set(True)
-                        print(act + "Move")
+                    src = mimetypes.guess_type (path, strict=1)[0]
+                    dest = mimetypes.guess_type (dest, strict=1)[0]
+                    if src == dest:
+                        val = 5
+                        print(act + "Rename")
                         self.warning_popup(self.win, bt, val)
                         return
                     else:
+                        bt.disabled_set(False)
+                        notsame_popup(self.win)
+                        return
+            else:
+                self.fssrc.path_set(HOME)
+                self.fssrc.selected_set(HOME)
+                file_noexist_popup(self.win)
+                return
+        else:
+            pass
+
+        if os.path.exists(path):
+            if os.path.exists(dest):
+                if not val:
+                    print(act + "No action selected.")
+                    return
+                else:
+                    if val == 1:
                         bt.disabled_set(True)
-                        print(act + "Remove")
+                        print(act + "Copy")
                         if os.path.isdir(path):
-                            val = 4
+                            val = 6
                             self.warning_popup(self.win, bt, val)
                             return
                         else:
                             self.warning_popup(self.win, bt, val)
                             return
+                    else:
+                        if path == HOME:
+                            return
+                        elif path == "" or path == "/etc" or path == "/usr" or path == "/bin" or path == "/boot" or path == "/lib" or path == "/home" or path == "/lib32" or path == "/lib64" or path == "/opt" or path == "/proc" or path == "/root" or path == "/sbin" or path == "/var" or path == "/media" or path == "/mnt" or path == "/dev" or path == "/cdrom" or path == "/lost+found" or path == "/run" or path == "/selinux" or path == "/srv"or path == "/sys"or path == "/tmp" or path == "//vmlinuz" or path == "/vmlinuz" or path == "//initrd.img" or path == "/initrd.img":
+                            error_sys_popup(self.win)
+                            return
+                        elif os.path.ismount(path):
+                            error_mnt_popup(self.win)
+                            return
+                        else:
+                            bt.disabled_set(True)
+                            print(act + "Remove")
+                            if os.path.isdir(path):
+                                val = 4
+                                self.warning_popup(self.win, bt, val)
+                                return
+                            else:
+                                self.warning_popup(self.win, bt, val)
+                                return
+            else:
+                print("hey")
+                self.fsdest.path_set("/")
+                self.fsdest.selected_set("/")
+                dest_noexist_popup(self.win)
+                return
         else:
             self.fssrc.path_set(HOME)
             self.fssrc.selected_set(HOME)
@@ -275,16 +325,25 @@ class buttons_main(object):
     def en_wait(self, fs):
         path = fs.selected_get()
         testpath = self.fssrc.selected_get()
+        path = path.rstrip('\\')
+        path = path.rstrip('//')
+        testpath = testpath.rstrip('\\')
+        testpath = testpath.rstrip('//')
+        val = self.rdg.value_get()
         if os.path.exists(path):
             return
         else:
-            file_noexist_popup(self.win)
-            if path == testpath:
-                fs.selected_set(HOME)
-                fs.path_set(HOME)
+            if val == 2 and path != testpath:
+                return
             else:
-                fs.selected_set("/")
-                fs.path_set("/")
+                if path == testpath:
+                    file_noexist_popup(self.win)
+                    fs.selected_set(HOME)
+                    fs.path_set(HOME)
+                else:
+                    dest_noexist_popup(self.win)
+                    fs.selected_set("/")
+                    fs.path_set("/")
 
     def init_wait(self, fs, string):
         path = fs.selected_get()
@@ -314,6 +373,10 @@ class buttons_main(object):
             ran = "directory removal"
             dir_remove = "rm -R '%s'" %src
             esudo.eSudo(dir_remove, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
+        elif val == 5:
+            ran = "rename"
+            rename = "mv '%s' '%s'" %(src,dest)
+            esudo.eSudo(rename, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         else:
             ran = "directory copy"
             dir_copy = "cp -R '%s' '%s'" %(src, dest)
@@ -324,7 +387,7 @@ class buttons_main(object):
     def warning_popup(self, win, xbt, val):
         popup = elm.Popup(win)
         popup.size_hint_weight = (1.0, 1.0)
-        popup.text = "<b>WARNING!</><br><br>Modifying files/directories that require Super User privileges can potentially ruin your operating system.<ps><ps>Click <i>Continue</i> if you wish to proceed. Otherwise, click <i>Close</i>."
+        popup.text = "<b>WARNING!</><br><br>Modifying files/directories that require Super User privileges can potentially prevent your operating system from properly functioning. Backing up your system before manipulating system files is advised.<ps><ps>Click <i>Continue</i> if you wish to proceed. Otherwise, click <i>Close</i>."
         bt = elm.Button(win)
         bt.text = "Close"
         bt.callback_clicked_add(popup_close, popup, xbt)
