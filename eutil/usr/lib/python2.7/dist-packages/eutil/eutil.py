@@ -243,8 +243,6 @@ class buttons_main(object):
         dest = self.fsdest.selected_get()
         path = path.rstrip('\\')
         path = path.rstrip('//')
-        dest = dest.rstrip('\\')
-        dest = dest.rstrip('//')
         val = self.rdg.value_get()
         act = "Action: "
         if val == 2:
@@ -257,6 +255,8 @@ class buttons_main(object):
                     self.warning_popup(self.win, bt, val)
                     return
                 else:
+                    if os.path.isdir(path):
+                        path = "%s/" %path
                     src = mimetypes.guess_type (path, strict=1)[0]
                     dest = mimetypes.guess_type (dest, strict=1)[0]
                     if src == dest:
@@ -312,7 +312,6 @@ class buttons_main(object):
                                 self.warning_popup(self.win, bt, val)
                                 return
             else:
-                print("hey")
                 self.fsdest.path_set("/")
                 self.fsdest.selected_set("/")
                 dest_noexist_popup(self.win)
