@@ -356,11 +356,15 @@ class buttons_main(object):
             fs.path_set(path)
 
     def change_fs(self, rg):
+        dest = self.fsdest.selected_get()
         val = self.rdg.value_get()
         if val == 2:
             self.fsdest.is_save_set(True)
         else:
             self.fsdest.is_save_set(False)
+            if not os.path.exists(dest):
+                self.fsdest.selected_set("/")
+                self.fsdest.path_set("/")
 
     def execute(self, bt, val):
         src  = self.fssrc.selected_get()
