@@ -158,6 +158,7 @@ class buttons_main(object):
         rdb.show()
 
         rd = self.r1 = elm.Radio(win)
+        rd.callback_changed_add(self.change_fs)
         rd.state_value_set(1)
         rd.text_set("Copy")
         rdb.pack_end(rd)
@@ -165,6 +166,7 @@ class buttons_main(object):
         rd.show()
 
         rd = self.r2 = elm.Radio(win)
+        rd.callback_changed_add(self.change_fs)
         rd.state_value_set(2)
         rd.group_add(rdg)
         rd.text_set("Move")
@@ -172,6 +174,7 @@ class buttons_main(object):
         rd.show()
 
         rd = self.r3 = elm.Radio(win)
+        rd.callback_changed_add(self.change_fs)
         rd.state_value_set(3)
         rd.group_add(rdg)
         rd.text_set("Remove")
@@ -351,6 +354,13 @@ class buttons_main(object):
         else:
             fs.selected_set(path)
             fs.path_set(path)
+
+    def change_fs(self, rg):
+        val = self.rdg.value_get()
+        if val == 2:
+            self.fsdest.is_save_set(True)
+        else:
+            self.fsdest.is_save_set(False)
 
     def execute(self, bt, val):
         src  = self.fssrc.selected_get()
