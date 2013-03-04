@@ -213,7 +213,7 @@ class buttons_main(object):
         btbox.pack_end(hs)
         hs.show()
 
-        bt = self.bt = elm.Button(win)
+        bt = elm.Button(win)
         bt.text_set("Clear")
         bt.callback_clicked_add(self.clear_params)
         bt.size_hint_align_set(-1.0, -1.0)
