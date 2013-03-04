@@ -102,12 +102,15 @@ def finished_popup(win, ran):
 class buttons_main(object):
     def __init__(self, command=False):
 
+        self.params = params = None
+        self.shred = shred = None
+
 #----Main Window
         win = self.win = elm.StandardWindow("eutil", "eUtil")
         win.callback_delete_request_add(lambda o: elm.exit())
 
         vbox = elm.Box(win)
-        vbox.padding_set(5, 10)
+        vbox.padding_set(5, 5)
         vbox.size_hint_weight_set(1.0, 1.0)
         vbox.show()
 
@@ -128,6 +131,7 @@ class buttons_main(object):
         fs1.inwin_mode_set(True)
         fs1.is_save_set(False)
         fs1.path_set(HOME)
+        self.srctype = srctype = "dir"
         fs1.callback_file_chosen_add(self.init_wait)
         fs1.callback_activated_add(self.en_wait)
         fs1.size_hint_align_set(-1.0, -1.0)
@@ -147,7 +151,7 @@ class buttons_main(object):
         outbox.show()
 
         lb = elm.Label(win)
-        lb.text = "<b><i>Options:</i></b>"
+        lb.text = "<b><i>Actions:</i></b>"
         lb.size_hint_align = 0.5, 0.0
         outbox.pack_end(lb)
         lb.show()
@@ -181,14 +185,37 @@ class buttons_main(object):
         rdb.pack_end(rd)
         rd.show()
 
-        btbox = elm.Box(win)
-        btbox.size_hint_weight_set(1.0, 1.0)
-        outbox.pack_end(btbox)
-        btbox.show()
+        btnbox = elm.Box(win)
+        btnbox.size_hint_weight_set(1.0, 1.0)
+        outbox.pack_end(btnbox)
+        btnbox.show()
 
         bt = self.bt = elm.Button(win)
         bt.text_set("Execute")
         bt.callback_clicked_add(self.exec_check)
+        bt.size_hint_align_set(-1.0, -1.0)
+        bt.size_hint_weight_set(1.0, 1.0)
+        btnbox.pack_end(bt)
+        bt.show()
+
+        btbox = elm.Box(win)
+        btbox.horizontal_set(True)
+        btbox.size_hint_weight_set(1.0, 1.0)
+        outbox.pack_end(btbox)
+        btbox.show()
+
+        hs = self.hs = elm.Hoversel(win)
+        hs.hover_parent_set(win)
+        hs.text_set("Options")
+        hs.size_hint_weight_set(0.0, 0.0)
+        hs.size_hint_align_set(0.5, 0.5)
+        hs.disabled_set(True)
+        btbox.pack_end(hs)
+        hs.show()
+
+        bt = self.bt = elm.Button(win)
+        bt.text_set("Clear")
+        bt.callback_clicked_add(self.clear_params)
         bt.size_hint_align_set(-1.0, -1.0)
         bt.size_hint_weight_set(1.0, 1.0)
         btbox.pack_end(bt)
@@ -225,7 +252,7 @@ class buttons_main(object):
         sep.show()
 
         win.resize_object_add(vbox)
-        win.resize(510, 275)
+        win.resize(475, 375)
         win.show()
 
 #-------Add deb from CLI
@@ -333,10 +360,10 @@ class buttons_main(object):
         testpath = testpath.rstrip('//')
         val = self.rdg.value_get()
         if os.path.exists(path):
-            return
+            pass
         else:
             if val == 2 and path != testpath:
-                return
+                pass
             else:
                 if path == testpath:
                     file_noexist_popup(self.win)
@@ -346,18 +373,38 @@ class buttons_main(object):
                     dest_noexist_popup(self.win)
                     fs.selected_set("/")
                     fs.path_set("/")
+        if os.path.isfile(testpath):
+            self.srctype = "file"
+        else:
+            self.srctype = "dir"
+        self.change_fs(self)
 
-    def init_wait(self, fs, string):
+    def init_wait(self, fs, string):            
         path = fs.selected_get()
+        if os.path.isfile(path):
+            self.srctype = "file"
+        else:
+            self.srctype = "dir"
+        self.change_fs(self)
         if string:
             return
         else:
             fs.selected_set(path)
             fs.path_set(path)
 
-    def change_fs(self, rg):
+    def clear_params(self, bt): 
+        if self.hs.disabled_get():
+            return
+        else:
+            self.shred = None
+            self.params = None
+            self.hs.text_set("Options")
+
+    def change_fs(self, rg=None):
+        self.params = None
         dest = self.fsdest.selected_get()
         val = self.rdg.value_get()
+        self.hs.disabled_set(False)
         if val == 2:
             self.fsdest.is_save_set(True)
         else:
@@ -365,6 +412,60 @@ class buttons_main(object):
             if not os.path.exists(dest):
                 self.fsdest.selected_set("/")
                 self.fsdest.path_set("/")
+        if not self.hs.items_get() == "[]":
+            self.hs.clear()
+        if val == 1:
+            self.hs.item_add("Force", callback=self.frc)
+            self.hs.item_add("Hard Link", callback=self.hln)
+            self.hs.item_add("Symbolic Link", callback=self.sln)
+            self.hs.item_add("Update", callback=self.upd)
+            self.hs.item_add("Archive", callback=self.arch)
+            self.hs.item_add("One FS", callback=self.onefs)
+            self.hs.item_add("No Clobber", callback=self.nocl)
+        elif val == 2:
+            self.hs.item_add("Force", callback=self.frc)
+            self.hs.item_add("Update", callback=self.upd)
+            self.hs.item_add("No Clobber", callback=self.nocl)
+        else:
+            self.hs.item_add("Force", callback=self.frc)
+            self.hs.item_add("One FS", callback=self.onefs)
+            if self.srctype == "file":
+                self.hs.item_add("Shred", callback=self.shrd)
+        if self.params == None:
+            self.hs.text_set("Options")
+
+    def hln(self, hs, event):
+        self.hs.text_set("Options: Hard Link")
+        self.shred = None
+        self.params = "-l"
+    def sln(self, hs, event):
+        self.hs.text_set("Options: Symbolic Link")
+        self.shred = None
+        self.params = "-s"
+    def upd(self, hs, event):
+        self.hs.text_set("Options: Update")
+        self.shred = None
+        self.params = "-u"
+    def arch(self, hs, event):
+        self.hs.text_set("Options: Archive")
+        self.shred = None
+        self.params = "-a"
+    def nocl(self, hs, event):
+        self.hs.text_set("Options: No Clobber")
+        self.shred = None
+        self.params = "-n"
+    def frc(self, hs, event):
+        self.hs.text_set("Options: Force")
+        self.shred = None
+        self.params = "-f"
+    def onefs(self, hs, event):
+        self.hs.text_set("Options: One File-System")
+        self.shred = None
+        self.params = "--one-file-system"
+    def shrd(self, hs, event):
+        self.hs.text_set("Options: Shred")
+        self.params = None
+        self.shred = True
 
     def execute(self, bt, val):
         src  = self.fssrc.selected_get()
@@ -373,26 +474,43 @@ class buttons_main(object):
         if   val == 1:
             ran = "copy"
             copy = "cp '%s' '%s'" %(src, dest)
+            if self.params:
+                copy = "cp %s '%s' '%s'" %(self.params, src, dest)
             esudo.eSudo(copy, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         elif val == 2:
             ran = "move"
-            move = "mv '%s' '%s'" %(src,dest)
+            move = "mv '%s' '%s'" %(src, dest)
+            if self.params:
+                move = "mv %s '%s' '%s'" %(self.params, src, dest)
             esudo.eSudo(move, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         elif val == 3:
             ran = "removal"
             remove = "rm '%s'" %src
+            if self.params:
+                print("h")
+                remove = "rm %s '%s'" %(self.params, src)
+            elif self.shred:
+                remove = "shred '%s'" %src
+            else:
+                pass
             esudo.eSudo(remove, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         elif val == 4:
             ran = "directory removal"
             dir_remove = "rm -R '%s'" %src
+            if self.params:
+                dir_remove = "rm -R %s '%s'" %(self.params, src)
             esudo.eSudo(dir_remove, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         elif val == 5:
             ran = "rename"
-            rename = "mv '%s' '%s'" %(src,dest)
+            rename = "mv '%s' '%s'" %(src, dest)
+            if self.params:
+                rename = "mv %s '%s' '%s'" %(self.params, src, dest)
             esudo.eSudo(rename, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
         else:
             ran = "directory copy"
             dir_copy = "cp -R '%s' '%s'" %(src, dest)
+            if self.params:
+                dir_copy = "cp -R %s '%s' '%s'" %(self.params, src, dest)
             esudo.eSudo(dir_copy, self.win, self.bt, ran, start_callback=self.start_cb, end_callback=self.end_cb, data=n)
 
 
@@ -407,7 +525,7 @@ class buttons_main(object):
         popup.part_content_set("button1", bt)
         bt = elm.Button(win)
         bt.text = "Continue"
-        if val == 1 or val == 2 or val == 5:
+        if val == 1 or val == 2 or val == 5 or val == 6:
             bt.callback_clicked_add(self.execute, val)
             bt.callback_clicked_add(popup_close, popup)
         else:
