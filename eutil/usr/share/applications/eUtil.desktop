@@ -11,3 +11,4 @@ Terminal=false
 Name=eUtil
 GenericName=File/Directory Manipulation
 Comment[en_US]=A simple interface for cp, mv, and rm.
+MimeType=inode/directory;
